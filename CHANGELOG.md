@@ -1,5 +1,11 @@
 # @codama/renderers-js-umi
 
+## 1.1.23
+
+### Patch Changes
+
+- [#5](https://github.com/codama-idl/renderers-js-umi/pull/5) [`754a003`](https://github.com/codama-idl/renderers-js-umi/commit/754a0035bb9637dfdf03a8818d88cbca245b329f) Thanks [@lorisleiva](https://github.com/lorisleiva)! - Bump Codama
+
 ## 1.1.21
 
 ### Patch Changes
