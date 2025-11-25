@@ -1,5 +1,11 @@
 # @codama/renderers-js-umi
 
+## 1.1.24
+
+### Patch Changes
+
+- [#53](https://github.com/codama-idl/renderers-js-umi/pull/53) [`857abd0`](https://github.com/codama-idl/renderers-js-umi/commit/857abd0422f7992d4b2e9c23090d675df28fa58f) Thanks [@lorisleiva](https://github.com/lorisleiva)! - Use latest RenderMap type from renderers-core
+
 ## 1.1.23
 
 ### Patch Changes
