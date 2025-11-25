@@ -21,7 +21,7 @@ import {
     structTypeNodeFromInstructionArgumentNodes,
     VALUE_NODES,
 } from '@codama/nodes';
-import { addToRenderMap, createRenderMap, mergeRenderMaps, RenderMap } from '@codama/renderers-core';
+import { addToRenderMap, BaseFragment, createRenderMap, mergeRenderMaps, RenderMap } from '@codama/renderers-core';
 import {
     extendVisitor,
     getByteSizeVisitor,
@@ -62,7 +62,7 @@ export type GetRenderMapOptions = {
     renderParentInstructions?: boolean;
 };
 
-export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<RenderMap> {
+export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<RenderMap<BaseFragment>> {
     const linkables = new LinkableDictionary();
     const stack = new NodeStack();
     let program: ProgramNode | null = null;
@@ -229,9 +229,8 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<
                     }
                     const hasVariableSeeds = pdaSeeds.filter(isNodeFilter('variablePdaSeedNode')).length > 0;
 
-                    return createRenderMap(
-                        `accounts/${camelCase(node.name)}.ts`,
-                        render('accountsPage.njk', {
+                    return createRenderMap(`accounts/${camelCase(node.name)}.ts`, {
+                        content: render('accountsPage.njk', {
                             account: node,
                             customData,
                             discriminator: resolvedDiscriminator,
@@ -242,7 +241,7 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<
                             seeds,
                             typeManifest,
                         }),
-                    );
+                    });
                 },
 
                 visitDefinedType(node) {
@@ -257,9 +256,8 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<
                             `get${pascalCaseName}Serializer`,
                         ]);
 
-                    return createRenderMap(
-                        `types/${camelCase(node.name)}.ts`,
-                        render('definedTypesPage.njk', {
+                    return createRenderMap(`types/${camelCase(node.name)}.ts`, {
+                        content: render('definedTypesPage.njk', {
                             definedType: node,
                             imports: imports.toString({
                                 ...dependencyMap,
@@ -268,7 +266,7 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<
                             isDataEnum: isNode(node.type, 'enumTypeNode') && isDataEnum(node.type),
                             typeManifest,
                         }),
-                    );
+                    });
                 },
 
                 visitInstruction(node) {
@@ -418,9 +416,8 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<
                         imports.add(getImportFrom(remainingAccounts.value), camelCase(remainingAccounts.value.name));
                     }
 
-                    return createRenderMap(
-                        `instructions/${camelCase(node.name)}.ts`,
-                        render('instructionsPage.njk', {
+                    return createRenderMap(`instructions/${camelCase(node.name)}.ts`, {
+                        content: render('instructionsPage.njk', {
                             accounts,
                             argsWithDefaults,
                             byteDelta,
@@ -448,7 +445,7 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<
                             resolvedInputs,
                             resolvedInputsWithDefaults,
                         }),
-                    );
+                    });
                 },
 
                 visitProgram(node, { self }) {
@@ -468,22 +465,18 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<
                             }).map(ix => visit(ix, self)),
                         ]),
                         r =>
-                            addToRenderMap(
-                                r,
-                                `errors/${camelCase(node.name)}.ts`,
-                                render('errorsPage.njk', {
+                            addToRenderMap(r, `errors/${camelCase(node.name)}.ts`, {
+                                content: render('errorsPage.njk', {
                                     errors: node.errors,
                                     imports: new ImportMap()
                                         .add('umi', ['ProgramError', 'Program'])
                                         .toString(dependencyMap),
                                     program: node,
                                 }),
-                            ),
+                            }),
                         r =>
-                            addToRenderMap(
-                                r,
-                                `programs/${camelCase(node.name)}.ts`,
-                                render('programsPage.njk', {
+                            addToRenderMap(r, `programs/${camelCase(node.name)}.ts`, {
+                                content: render('programsPage.njk', {
                                     imports: new ImportMap()
                                         .add('umi', ['ClusterFilter', 'Context', 'Program', 'PublicKey'])
                                         .add('errors', [
@@ -493,7 +486,7 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<
                                         .toString(dependencyMap),
                                     program: node,
                                 }),
-                            ),
+                            }),
                     );
                     program = null;
                     return renders;
@@ -525,17 +518,23 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<
                     return mergeRenderMaps([
                         createRenderMap({
                             ['accounts/index.ts']:
-                                accountsToExport.length > 0 ? render('accountsIndex.njk', ctx) : undefined,
+                                accountsToExport.length > 0 ? { content: render('accountsIndex.njk', ctx) } : undefined,
                             ['errors/index.ts']:
-                                programsToExport.length > 0 ? render('errorsIndex.njk', ctx) : undefined,
-                            ['index.ts']: render('rootIndex.njk', ctx),
+                                programsToExport.length > 0 ? { content: render('errorsIndex.njk', ctx) } : undefined,
+                            ['index.ts']: { content: render('rootIndex.njk', ctx) },
                             ['instructions/index.ts']:
-                                instructionsToExport.length > 0 ? render('instructionsIndex.njk', ctx) : undefined,
+                                instructionsToExport.length > 0
+                                    ? { content: render('instructionsIndex.njk', ctx) }
+                                    : undefined,
                             ['programs/index.ts']:
-                                programsToExport.length > 0 ? render('programsIndex.njk', ctx) : undefined,
-                            ['shared/index.ts']: hasAnythingToExport ? render('sharedPage.njk', ctx) : undefined,
+                                programsToExport.length > 0 ? { content: render('programsIndex.njk', ctx) } : undefined,
+                            ['shared/index.ts']: hasAnythingToExport
+                                ? { content: render('sharedPage.njk', ctx) }
+                                : undefined,
                             ['types/index.ts']:
-                                definedTypesToExport.length > 0 ? render('definedTypesIndex.njk', ctx) : undefined,
+                                definedTypesToExport.length > 0
+                                    ? { content: render('definedTypesIndex.njk', ctx) }
+                                    : undefined,
                         }),
                         ...getAllPrograms(node).map(p => visit(p, self)),
                     ]);
