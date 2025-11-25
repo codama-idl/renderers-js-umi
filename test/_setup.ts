@@ -1,4 +1,4 @@
-import { getFromRenderMap, RenderMap } from '@codama/renderers-core';
+import { BaseFragment, getFromRenderMap, RenderMap } from '@codama/renderers-core';
 import { Plugin } from 'prettier';
 import * as estreePlugin from 'prettier/plugins/estree';
 import * as typeScriptPlugin from 'prettier/plugins/typescript';
@@ -17,9 +17,13 @@ const PRETTIER_OPTIONS: Parameters<typeof format>[1] = {
     useTabs: false,
 };
 
-export function renderMapContains(renderMap: RenderMap, key: string, expected: (RegExp | string)[] | RegExp | string) {
+export function renderMapContains(
+    renderMap: RenderMap<BaseFragment>,
+    key: string,
+    expected: (RegExp | string)[] | RegExp | string,
+) {
     expect(renderMap.has(key), `RenderMap is missing key "${key}".`).toBe(true);
-    return codeContains(getFromRenderMap(renderMap, key), expected);
+    return codeContains(getFromRenderMap(renderMap, key).content, expected);
 }
 
 export async function codeContains(actual: string, expected: (RegExp | string)[] | RegExp | string) {
@@ -46,9 +50,13 @@ export async function codeDoesNotContain(actual: string, expected: (RegExp | str
     });
 }
 
-export function renderMapContainsImports(renderMap: RenderMap, key: string, expectedImports: Record<string, string[]>) {
+export function renderMapContainsImports(
+    renderMap: RenderMap<BaseFragment>,
+    key: string,
+    expectedImports: Record<string, string[]>,
+) {
     expect(renderMap.has(key), `RenderMap is missing key "${key}".`).toBe(true);
-    return codeContainsImports(getFromRenderMap(renderMap, key), expectedImports);
+    return codeContainsImports(getFromRenderMap(renderMap, key).content, expectedImports);
 }
 
 export async function codeContainsImports(actual: string, expectedImports: Record<string, string[]>) {
