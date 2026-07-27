@@ -75,8 +75,8 @@ export function getValidationItemsVisitor(): Visitor<readonly ValidationItem[]> 
                     items.push(...checkExportConflicts(node, exports));
 
                     const reservedAccountFields = new Set(['publicKey', 'header']);
-                    const invalidFields = resolveNestedTypeNode(node.data)
-                        .fields.map(field => field.name)
+                    const invalidFields = (resolveNestedTypeNode(node.data).fields ?? [])
+                        .map(field => field.name)
                         .filter(name => reservedAccountFields.has(name));
                     if (invalidFields.length > 0) {
                         const x = invalidFields.join(', ');
