@@ -119,8 +119,8 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<
 
     function getMergeConflictsForInstructionAccountsAndArgs(instruction: InstructionNode): string[] {
         const allNames = [
-            ...instruction.accounts.map(account => account.name),
-            ...instruction.arguments.map(field => field.name),
+            ...(instruction.accounts ?? []).map(account => account.name),
+            ...(instruction.arguments ?? []).map(field => field.name),
             ...(instruction.extraArguments ?? []).map(field => field.name),
         ];
         const duplicates = allNames.filter((e, i, a) => a.indexOf(e) !== i);
@@ -166,7 +166,7 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<
                         | (FieldDiscriminatorNode & { value: string })
                         | null = null;
                     if (isNode(discriminator, 'fieldDiscriminatorNode')) {
-                        const discriminatorField = resolveNestedTypeNode(node.data).fields.find(
+                        const discriminatorField = (resolveNestedTypeNode(node.data).fields ?? []).find(
                             f => f.name === discriminator.name,
                         );
                         const discriminatorValue = discriminatorField?.defaultValue
@@ -279,24 +279,26 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<
                     // Instruction helpers.
                     const customData = customInstructionData.get(node.name);
                     const linkedDataArgs = !!customData;
-                    const hasAccounts = node.accounts.length > 0;
-                    const hasData = linkedDataArgs || node.arguments.length > 0;
+                    const hasAccounts = (node.accounts ?? []).length > 0;
+                    const hasData = linkedDataArgs || (node.arguments ?? []).length > 0;
                     const hasDataArgs =
                         linkedDataArgs ||
-                        node.arguments.filter(field => field.defaultValueStrategy !== 'omitted').length > 0;
+                        (node.arguments ?? []).filter(field => field.defaultValueStrategy !== 'omitted').length > 0;
                     const hasExtraArgs =
                         (node.extraArguments ?? []).filter(field => field.defaultValueStrategy !== 'omitted').length >
                         0;
                     const hasAnyArgs = hasDataArgs || hasExtraArgs;
                     const allArgumentsWithDefaultValue = [
-                        ...node.arguments.filter(a => a.defaultValue && !isNode(a.defaultValue, VALUE_NODES)),
+                        ...(node.arguments ?? []).filter(a => a.defaultValue && !isNode(a.defaultValue, VALUE_NODES)),
                         ...(node.extraArguments ?? []).filter(a => a.defaultValue),
                     ];
                     const hasArgDefaults = allArgumentsWithDefaultValue.length > 0;
                     const hasArgResolvers = allArgumentsWithDefaultValue.some(a =>
                         isNode(a.defaultValue, 'resolverValueNode'),
                     );
-                    const hasAccountResolvers = node.accounts.some(a => isNode(a.defaultValue, 'resolverValueNode'));
+                    const hasAccountResolvers = (node.accounts ?? []).some(a =>
+                        isNode(a.defaultValue, 'resolverValueNode'),
+                    );
                     const byteDelta = node.byteDeltas?.[0] ?? undefined;
                     const hasByteResolver = byteDelta && isNode(byteDelta.value, 'resolverValueNode');
                     let remainingAccounts = node.remainingAccounts?.[0] ?? undefined;
@@ -356,7 +358,7 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<
                         .map(input => input.name);
 
                     // Accounts.
-                    const accounts = node.accounts.map(account => {
+                    const accounts = (node.accounts ?? []).map(account => {
                         const hasDefaultValue = !!account.defaultValue;
                         const resolvedAccount = resolvedInputs.find(
                             input => input.kind === 'instructionAccountNode' && input.name === account.name,
@@ -452,13 +454,13 @@ export function getRenderMapVisitor(options: GetRenderMapOptions = {}): Visitor<
                     program = node;
                     const pascalCaseName = pascalCase(node.name);
                     const customDataDefinedType = [
-                        ...getDefinedTypeNodesToExtract(node.accounts, customAccountData),
-                        ...getDefinedTypeNodesToExtract(node.instructions, customInstructionData),
+                        ...getDefinedTypeNodesToExtract(node.accounts ?? [], customAccountData),
+                        ...getDefinedTypeNodesToExtract(node.instructions ?? [], customInstructionData),
                     ];
                     const renders = pipe(
                         mergeRenderMaps([
-                            ...node.accounts.map(a => visit(a, self)),
-                            ...node.definedTypes.map(t => visit(t, self)),
+                            ...(node.accounts ?? []).map(a => visit(a, self)),
+                            ...(node.definedTypes ?? []).map(t => visit(t, self)),
                             ...customDataDefinedType.map(t => visit(t, self)),
                             ...getAllInstructionsWithSubs(node, {
                                 leavesOnly: !renderParentInstructions,

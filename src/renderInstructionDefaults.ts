@@ -83,7 +83,7 @@ export function renderInstructionDefaults(
                 const pdaProgram = defaultValue.pda.programId
                     ? `context.programs.getPublicKey('${defaultValue.pda.programId}', '${defaultValue.pda.programId}')`
                     : 'programId';
-                const pdaSeeds = defaultValue.pda.seeds.flatMap((seed): string[] => {
+                const pdaSeeds = (defaultValue.pda.seeds ?? []).flatMap((seed): string[] => {
                     if (isNode(seed, 'constantPdaSeedNode') && isNode(seed.value, 'programIdValueNode')) {
                         imports
                             .add('umiSerializers', 'publicKey')
@@ -99,7 +99,7 @@ export function renderInstructionDefaults(
                     }
                     if (isNode(seed, 'variablePdaSeedNode')) {
                         const typeManifest = visit(seed.type, typeManifestVisitor);
-                        const valueSeed = defaultValue.seeds.find(s => s.name === seed.name)?.value;
+                        const valueSeed = (defaultValue.seeds ?? []).find(s => s.name === seed.name)?.value;
                         if (!valueSeed) return [];
                         if (isNode(valueSeed, 'accountValueNode')) {
                             imports.mergeWith(typeManifest.serializerImports);
@@ -132,7 +132,7 @@ export function renderInstructionDefaults(
             imports.add(getImportFrom(defaultValue.pda), pdaFunction);
             interfaces.add('eddsa');
             const pdaArgs = ['context'];
-            const pdaSeeds = defaultValue.seeds.map((seed): string => {
+            const pdaSeeds = (defaultValue.seeds ?? []).map((seed): string => {
                 if (isNode(seed.value, 'accountValueNode')) {
                     imports.add('shared', 'expectPublicKey');
                     return `${seed.name}: expectPublicKey(resolvedAccounts.${camelCase(seed.value.name)}.value)`;
@@ -262,6 +262,10 @@ export function renderInstructionDefaults(
                 interfaces,
                 render: `if (${condition}) {\n${ifTrueRenderer ? ifTrueRenderer.render : ifFalseRenderer?.render}\n}`,
             };
+        case 'accountFieldValueNode':
+        case 'injectedValueNode':
+            // These contextual value nodes are not yet supported as instruction input defaults by this renderer.
+            throw new Error(`Unsupported instruction input default value node: [${defaultValue.kind}]`);
         default:
             const valueManifest = visit(defaultValue, typeManifestVisitor);
             imports.mergeWith(valueManifest.valueImports);

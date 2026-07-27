@@ -148,7 +148,7 @@ export function getTypeManifestVisitor(input: {
                 },
 
                 visitArrayValue(node, { self }) {
-                    const list = node.items.map(value => visit(value, self));
+                    const list = (node.items ?? []).map(value => visit(value, self));
                     return {
                         ...typeManifest(),
                         value: `[${list.map(c => c.value).join(', ')}]`,
@@ -347,7 +347,7 @@ export function getTypeManifestVisitor(input: {
                     const looseImports = new ImportMap();
                     const serializerImports = new ImportMap();
 
-                    const variantNames = enumType.variants.map(variant => pascalCase(variant.name));
+                    const variantNames = (enumType.variants ?? []).map(variant => pascalCase(variant.name));
                     const currentParentName = { ...parentName };
                     parentName = null;
                     const options: string[] = [];
@@ -386,7 +386,7 @@ export function getTypeManifestVisitor(input: {
                         };
                     }
 
-                    const variants = enumType.variants.map(variant => {
+                    const variants = (enumType.variants ?? []).map(variant => {
                         const variantName = pascalCase(variant.name);
                         parentName = currentParentName
                             ? {
@@ -480,7 +480,7 @@ export function getTypeManifestVisitor(input: {
                         strict: `${pascalCase(instruction.name)}InstructionData`,
                     };
                     const link = customInstructionData.get(instruction.name)?.linkNode;
-                    const struct = structTypeNodeFromInstructionArgumentNodes(instruction.arguments);
+                    const struct = structTypeNodeFromInstructionArgumentNodes(instruction.arguments ?? []);
                     const manifest = link ? visit(link, self) : visit(struct, self);
                     parentName = null;
                     return manifest;
@@ -514,7 +514,7 @@ export function getTypeManifestVisitor(input: {
                 },
 
                 visitMapValue(node, { self }) {
-                    const map = node.entries.map(entry => visit(entry, self));
+                    const map = (node.entries ?? []).map(entry => visit(entry, self));
                     return {
                         ...typeManifest(),
                         value: `new Map([${map.map(c => c.value).join(', ')}])`,
@@ -635,7 +635,7 @@ export function getTypeManifestVisitor(input: {
                 },
 
                 visitSetValue(node, { self }) {
-                    const set = node.items.map(value => visit(value, self));
+                    const set = (node.items ?? []).map(value => visit(value, self));
                     return {
                         ...typeManifest(),
                         value: `new Set([${set.map(c => c.value).join(', ')}])`,
@@ -767,7 +767,7 @@ export function getTypeManifestVisitor(input: {
                     const currentParentName = parentName;
                     parentName = null;
 
-                    const fields = structType.fields.map(field => visit(field, self));
+                    const fields = (structType.fields ?? []).map(field => visit(field, self));
                     const mergedManifest = mergeManifests(fields);
                     mergedManifest.serializerImports.add('umiSerializers', 'struct');
                     const fieldSerializers = fields.map(field => field.serializer).join(', ');
@@ -785,7 +785,7 @@ export function getTypeManifestVisitor(input: {
                         valueImports: new ImportMap(),
                     };
 
-                    const optionalFields = structType.fields.filter(f => !!f.defaultValue);
+                    const optionalFields = (structType.fields ?? []).filter(f => !!f.defaultValue);
                     if (optionalFields.length === 0) {
                         return baseManifest;
                     }
@@ -815,7 +815,7 @@ export function getTypeManifestVisitor(input: {
                 },
 
                 visitStructValue(node, { self }) {
-                    const struct = node.fields.map(field => visit(field, self));
+                    const struct = (node.fields ?? []).map(field => visit(field, self));
                     return {
                         ...typeManifest(),
                         value: `{ ${struct.map(c => c.value).join(', ')} }`,
@@ -824,7 +824,7 @@ export function getTypeManifestVisitor(input: {
                 },
 
                 visitTupleType(tupleType, { self }) {
-                    const items = tupleType.items.map(item => visit(item, self));
+                    const items = (tupleType.items ?? []).map(item => visit(item, self));
                     const mergedManifest = mergeManifests(items);
                     mergedManifest.serializerImports.add('umiSerializers', 'tuple');
                     const itemSerializers = items.map(child => child.serializer).join(', ');
@@ -838,7 +838,7 @@ export function getTypeManifestVisitor(input: {
                 },
 
                 visitTupleValue(node, { self }) {
-                    const list = node.items.map(value => visit(value, self));
+                    const list = (node.items ?? []).map(value => visit(value, self));
                     return {
                         ...typeManifest(),
                         value: `[${list.map(c => c.value).join(', ')}]`,

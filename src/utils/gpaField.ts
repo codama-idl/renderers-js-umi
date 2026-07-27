@@ -13,7 +13,7 @@ export function getGpaFieldsFromAccount(
 ): GpaField[] {
     let offset: number | null = 0;
     const struct = resolveNestedTypeNode(node.data);
-    return struct.fields.map((field): GpaField => {
+    return (struct.fields ?? []).map((field): GpaField => {
         const fieldOffset = offset;
         if (offset !== null) {
             const newOffset = visit(field.type, sizeVisitor);
