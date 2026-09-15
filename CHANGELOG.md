@@ -1,5 +1,11 @@
 # @codama/renderers-js-umi
 
+## 1.1.25
+
+### Patch Changes
+
+- [#71](https://github.com/codama-idl/renderers-js-umi/pull/71) [`2dbdfbf`](https://github.com/codama-idl/renderers-js-umi/commit/2dbdfbf3c249e61f16743c990b772e14127fca73) Thanks [@lorisleiva](https://github.com/lorisleiva)! - Support `@codama/nodes@1.10`, whose node array attributes are now optional (`Array<T> | undefined`). Array reads are guarded with `?? []` throughout the renderer, and the new `injectedValueNode` and `accountFieldValueNode` instruction-input default kinds now throw an explicit unsupported-node error rather than being silently mishandled.
+
 ## 1.1.24
 
 ### Patch Changes
